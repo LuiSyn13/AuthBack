@@ -1,12 +1,13 @@
 // controllers/auth.controller.js
-const { OAuth2Client } = require('google-auth-library');
+import { OAuth2Client } from 'google-auth-library';
+import pool from '../db.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
+import 'dotenv/config';
+
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-const pool = require('../db');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-require('dotenv').config();
 
 const transport = nodemailer.createTransport({
     service: 'gmail',
@@ -17,7 +18,7 @@ const transport = nodemailer.createTransport({
 })
 
 // Lógica para registrar un nuevo usuario
-exports.register = async (req, res) => {
+export const register = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -64,7 +65,7 @@ exports.register = async (req, res) => {
 };
 
 // Nueva ruta para verificar el Email
-exports.verify_email = async (req, res) => {
+export const verify_email = async (req, res) => {
     const { token } = req.query;
     if(!token) {
         return res.status(400).send('Token de verificacion no proporcionado.');
@@ -89,7 +90,7 @@ exports.verify_email = async (req, res) => {
 }
 
 // Lógica para iniciar sesión
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -144,7 +145,7 @@ exports.login = async (req, res) => {
 };
 
 // Lógica para login con redes sociales (ejemplo con Google)
-exports.social_login = async (req, res) => {
+export const social_login = async (req, res) => {
     const { provider, token } = req.body;
 
     if (!provider || !token) {
@@ -207,5 +208,18 @@ exports.social_login = async (req, res) => {
     } catch (e) {
         console.error('Error al procesar el token de Google:', e);
         res.status(500).json({ message: 'Error interno del servidor. Token inválido o problema de conexión.' });
+    }
+};
+
+// Lógica para eliminar una cuenta de usuario
+export const deleteAccount = async (req, res) => {
+    const userId = req.user.id;
+
+    try {
+        await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+        res.status(200).json({ message: 'Tu cuenta ha sido eliminada exitosamente.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };

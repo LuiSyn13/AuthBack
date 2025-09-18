@@ -1,8 +1,9 @@
 // routes/posts.routes.js
-const express = require('express');
+import express from 'express';
+import * as postsController from '../controllers/posts.controller.js';
+import authenticateToken from '../middleware/auth.middleware.js';
+
 const router = express.Router();
-const postsController = require('../controllers/posts.controller');
-const authenticateToken = require('../middleware/auth.middleware');
 
 // Ruta para crear un nuevo post (protegida)
 router.post('/', authenticateToken, postsController.createPost);
@@ -13,4 +14,10 @@ router.get('/', authenticateToken, postsController.getAllPosts);
 // Ruta para obtener los posts del usuario autenticado (protegida)
 router.get('/me', authenticateToken, postsController.getPostsByUser);
 
-module.exports = router;
+// Ruta para actualizar un post (protegida)
+router.put('/:id', authenticateToken, postsController.updatePost);
+
+// Ruta para eliminar un post (protegida)
+router.delete('/:id', authenticateToken, postsController.deletePost);
+
+export default router;
